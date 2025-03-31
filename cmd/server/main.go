@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
+
+	"github.com/SisyphianLiger/RabbitMQAndGolang/internal/pubsub"
+	"github.com/SisyphianLiger/RabbitMQAndGolang/internal/routing"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -12,26 +13,34 @@ import (
 const connectionString = "amqp://guest:guest@localhost:5672/"
 
 func main() {
-	conn, err := amqp.Dial(connectionString)
+	conn, _ := amqp.Dial(connectionString)
+	fmt.Printf("Connection Successful\n")
 
-	fmt.Println("Starting Peril server...")
-	
 	defer func(conn *amqp.Connection) {
 		if err := conn.Close(); err != nil {
 			log.Fatalf("Error Closing Program: Crashing")
 		}
 	}(conn)
 
-	if err != nil {
-		log.Fatalf("Could Not Connecto to RabbitMQ Server")
+
+	pubChan, pubErr := conn.Channel()
+
+	if pubErr != nil {
+		log.Fatalf("Failed to make Channel")
 	}
 
-	fmt.Printf("Connection Successful\n")
+	pubsubErr := pubsub.PublishJSON(
+		pubChan, 
+		string(routing.ExchangePerilDirect),
+		string(routing.PauseKey),
+		routing.PlayingState { IsPaused: true, },
+		)
 
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt)
-	<-signalChan
+	if pubsubErr != nil {
+		log.Printf("Could not publish time: %v", pubsubErr)
+	}
 
-	fmt.Printf("\nConnection Stopped\n")
-		
+
+	fmt.Println("Pause Message has been sent")
+	
 }

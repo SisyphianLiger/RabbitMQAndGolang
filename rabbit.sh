@@ -7,11 +7,11 @@ case "$1" in
         ;;
     stop)
         echo "Stopping RabbitMQ container..."
-        docker stop rabbitmq-stomp
+        docker stop rabbitmq
         ;;
     logs)
         echo "Fetching logs for RabbitMQ container..."
-        docker logs -f rabbitmq-stomp
+        docker logs -f rabbitmq
         ;;
     *)
         echo "Usage: $0 {start|stop|logs}"
