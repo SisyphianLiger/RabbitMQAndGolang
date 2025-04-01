@@ -66,6 +66,7 @@ func DeclareAndBind(
 				false,
 				nil,
 			)
+		fmt.Printf("durable: %v\n", queueType)
 		case transient:
 		queue, error = newChan.QueueDeclare(
 				queueName,
@@ -76,13 +77,13 @@ func DeclareAndBind(
 				nil,
 			)
 		default:
-			return nil, amqp.Queue{}, fmt.Errorf("Error with Queue Type: Need durable or transient, got %d", queueType) 
+			return nil, amqp.Queue{}, fmt.Errorf("Error with Queue Type: Need durable or transient, got %d\n", queueType) 
 	}
+
 	if error != nil {
-		return nil, amqp.Queue{}, fmt.Errorf("Error Declaring Queue %v", error) 
+		return nil, amqp.Queue{}, fmt.Errorf("Error Declaring Queue %v\n", error) 
 	}
-	
-	bindErr := newChan.QueueBind(queue.Name, key, exchange, false, nil)
+	bindErr := newChan.QueueBind(queueName, key, exchange, false, nil)
 	if bindErr != nil {
 		return nil, amqp.Queue{}, fmt.Errorf("Error Binding the Queue %v\n", bindErr) 
 	}

@@ -16,14 +16,13 @@ const connectionString = "amqp://guest:guest@localhost:5672/"
 
 func main() {
 	fmt.Println("Starting Peril client...")
-	conn, _ := amqp.Dial(connectionString)
+	conn, err := amqp.Dial(connectionString)
+	if err != nil {
+		fmt.Printf("Connetion Error %v", err)
+	}
 	fmt.Printf("Connection Successful\n")
+	defer conn.Close()
 
-	defer func(conn *amqp.Connection) {
-		if err := conn.Close(); err != nil {
-			log.Fatalf("Error Closing Program: Crashing")
-		}
-	}(conn)
 	name, err := gamelogic.ClientWelcome()	
 	if err != nil {
 		log.Printf("Incorrect Name: %v", err)
@@ -32,13 +31,13 @@ func main() {
 	_, _, declareErr := pubsub.DeclareAndBind(
 			conn,
 			routing.ExchangePerilDirect,
-			name,
+			routing.PauseKey + "." + name,
 			routing.PauseKey,
 			pubsub.QueueType("transient"),
 		)
 
 	if declareErr != nil {
-		log.Printf("Error Declaring the Queue %v\n", declareErr)
+		log.Printf("Error Declaring the Queue\n %v\n", declareErr)
 	}	// wait for ctrl+c
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
