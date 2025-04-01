@@ -44,3 +44,23 @@ Terminology:
     - Queue: A buffer in the RabbitMQ server that holds messages until they are consumed
     - Channel: A virtual connection inside a connection that allows you to create queues, exchanges, publish messages
     - Connectin: TCP connection to the RabbitMQ Server
+
+# Queues
+Can be durable or transient
+
+Durable: stored on disk
+Transient: stored in memory
+
+# Transient Queues
+Exclusive queue --> can only be used by the connection that created it
+Auto-delete --> the queue will be automatically deleted when its last connection is closed
+
+
+
+# Multi Consumers
+A quese can have 0,1,many consumers
+1. If queue has 0 --> messages will accumulate in the queue will never be processed
+2. If queue has 1 --> consumer will process all messages in the queue
+3. If queue has many --> messages will be distributed between them in round-robin fashion
+
+
