@@ -45,22 +45,48 @@ Terminology:
     - Channel: A virtual connection inside a connection that allows you to create queues, exchanges, publish messages
     - Connectin: TCP connection to the RabbitMQ Server
 
-# Queues
-Can be durable or transient
+# Types of Exchanges
+## Direct
+Matches an exchange with a exact key
+## Topic
+Matches an exchange with a pattern match key
+## Fanout
+Routes messages to all of the queues bound to it ignoring routing keys
+## Headers
+Routes based on header values instead of  the routing key. Similar to topic but uses message header attributes for routing
 
-Durable: stored on disk
-Transient: stored in memory
+# Routing Patterns
+Most powerful feature of RabbitMQ
+Allow message broker to flexibly tour messages to queues based on pattern matching rather than exact matches
 
-# Transient Queues
-Exclusive queue --> can only be used by the connection that created it
-Auto-delete --> the queue will be automatically deleted when its last connection is closed
+## Words
+Routing Keys -> made up of words separated by does: user.created or peril.game.won 
 
+## Wildcards
+    * --> substitutes for exactly one word
+        peril.*.won
 
+        MATCHES WITH
+        peril.game.won
+        peril.player.won
 
-# Multi Consumers
-A quese can have 0,1,many consumers
-1. If queue has 0 --> messages will accumulate in the queue will never be processed
-2. If queue has 1 --> consumer will process all messages in the queue
-3. If queue has many --> messages will be distributed between them in round-robin fashion
+        NOT
+        peril.game.lost
+        peril.won
 
+    # --> substitutes for zero or more words
+        peril.# 
+        MATCHS WITH
+        peril.game.won
+        peril.game.lost
+        peril.player
+        peril
+
+        NOT
+        peril.won
+        perilgame.won
+    
+    
+
+    
 

@@ -6,6 +6,11 @@ import (
 )
 
 func (gs *GameState) CommandSpawn(words []string) error {
+
+	if gs.isPaused() {
+		return errors.New("Game is Currently Paused")
+	}
+	
 	if len(words) < 3 {
 		return errors.New("usage: spawn <location> <rank>")
 	}

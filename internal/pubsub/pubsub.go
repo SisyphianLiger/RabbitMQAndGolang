@@ -103,3 +103,42 @@ func QueueType(input string) int {
 			return durable
 	}
 }
+
+
+func SubscribeJSON[T any](
+    conn *amqp.Connection, exchange, queueName,
+    key string, simpleQueueType int, handler func(T),
+) error {
+	newChan, newQueue, error :=  DeclareAndBind(
+						conn,
+						exchange,
+						queueName,
+						key,
+						simpleQueueType,
+		)
+	if error != nil {
+		return fmt.Errorf("Error %v\n", error)
+	}
+	delv, err := newChan.Consume(newQueue.Name, "", false, false, false, false, nil)
+	
+	if err != nil {
+		return fmt.Errorf("Error %v\n", err)
+	}
+
+
+	go func() {
+		for d := range delv {
+			var deliveredData T
+			err := json.Unmarshal(d.Body, &deliveredData)
+			if err != nil {
+				continue
+			}
+			handler(deliveredData)
+			if err := d.Ack(false); err != nil {
+				continue
+			}
+		}
+	}()
+
+	return nil
+}

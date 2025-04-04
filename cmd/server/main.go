@@ -27,9 +27,21 @@ func main() {
 	if pubErr != nil {
 		log.Fatalf("Failed to make Channel")
 	}
+	_, _, topicErr := pubsub.DeclareAndBind(
+			conn,
+			routing.ExchangePerilTopic,
+			routing.GameLogSlug,
+			"game_logs.*",
+			pubsub.QueueType("durable"),
+		)
+	
+	if topicErr != nil {
+		log.Printf("Error Declaring the Queue\n %v\n", topicErr)
+	}	
 
 
 	gamelogic.PrintServerHelp()
+	gameServerLoop:
 	for {
 		input := gamelogic.GetInput()
 		if len(input) == 0 {
@@ -56,14 +68,14 @@ func main() {
 			if resumeErr != nil {
 				log.Printf("Could not Resume Game %v", resumeErr)
 			}
+
 			case "quit":
 				log.Printf("Quiting Game")
-				break
+				break gameServerLoop
 			default:
 				log.Printf("Not A Understandable Command")
 			
 		}
-		break
 				
 	}
 }
@@ -72,4 +84,5 @@ func pauseGame[T any](ch *amqp.Channel, exchange string, key string, val T) erro
 	err := pubsub.PublishJSON(ch, exchange, key, val)
 	return err
 	
+
 }
