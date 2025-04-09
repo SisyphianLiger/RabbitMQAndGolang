@@ -86,7 +86,126 @@ Routing Keys -> made up of words separated by does: user.created or peril.game.w
         peril.won
         perilgame.won
     
-    
+# Naming
+You can name things whatever you want but its important to choose good names
 
-    
+## Exchange Naming
+    - Its common for one system to use all the same exchange
+        --> Thinkg how single database within postgres instance == single exchange 
+## Queue Naming
+    - key --> queue: If I have a routing key user.created, I might create a queue for my email notifier called:
+        --> user.created.email_notifier
+    - queue that consumes all events
+        --> commen.created.<event_name>
+    - Auto generated queue names are good for transient queues
+## Routing Key Naming
+    - Really want to get righ
+    - key names NEED to be descriptive but flexible
+    - noun.verb convention works well
+# Dead Letter
+PtP systems give an immediate message if something goes wrong: i.e. 404 Not Found
+But what about RabbitMQ --> Asynchronous
 
+## Dead Letter Exchanges and Queues
+PubSub systems can aggregate messages that fail to be processed in a dead letter queue
+
+Queues can be configured to send messages that faile to be processed to a dead letter exchange
+
+# Ack and Nack
+## Ack(nowledge)
+When a consumer receives a message it must acknowlede it
+If the subscriber crashes or fails to process the message the broker can just reque
+
+### N(ot)ack(nowledged) --> Nack
+Three options for a message
+    1. Acknowledge: Processed Successfully
+    2. Nack and requeue: Not processed successfully, but should be requeued on the same queue
+    3. Nack and discard: nor processed successfully, and should be discarded to dead-letter queue
+
+
+# Exact Delivery
+What methods do we use to actually deliver messages (to the dead queue or just queues in general)
+1. At-leat-once delivery: If message broker isn't sure the consumer receives msg, retry
+    -> Complexity: Medium
+    -> Efficiency: Medium
+    -> Reliability: Medium
+## At-least-once Cont.
+    - This is the default
+    - If consumer fails to proces message broker will just re-queue message
+    - Think NackRequeue
+2. At-most-one delivery: If message broker isn't sure the consumer revieced the message, discard
+    -> Complexity: Low
+    -> Efficiency: High
+    -> Reliability: Low
+## At-most-once Cont.
+    - Messages that are not mission-critical
+    - A debug log for example
+3. Exactly-once deliver: message is guaranteed to be delivered once and only once
+    -> Complexity: High
+    -> Efficiency: Low  
+    -> Reliability: High
+## At-most-once Cont.
+    - Apparenlty nearly impossible (distributed systems)
+    - Also the slowest and most difficult to implement
+# Serialization
+Many Types:
+    - JSON
+    - Gob
+    - Avro
+    - buffers
+
+Choosing one depends on schema of data used
+
+## General rule of thumb
+Adding/subtracting fields is ok I.E.:
+
+```go
+type User struct {
+    ID int
+    Name string
+}
+```
+
+```go
+type User struct {
+    ID int
+    Name string
+    Email string
+}
+// or
+type User struct {
+    ID int
+}
+```
+
+but changing the type of the field means we need to be careful
+
+```go
+type User struct {
+    ID string // change to string
+    Name string
+}
+```
+
+This is because old messages with int ID's we push to our consumers will fail to be decoded
+
+### Rule
+If you make a breaking change to a schema, use a new routing-key/queue. That way the old consumers can polish off all the old messages and the new consumers can start fresh with a new schema
+
+# Nodes and Clusters
+In Production we have entire cluseter of nodes
+    - High Availability
+    - Scalability
+    - Redundancy
+
+Using A cluster of 3 nodes is a solid starting point for most production applications
+
+Scale vertically when CPU/Ram/Disk hits
+
+# Quorum Queues and Classic Queues
+
+We have been using Classic Queues in this module, but they come with a problem
+
+They are lightweight and pretty good in general, but if the server crashes...so does their queue.
+
+To mitigate this we use Quorum Queues, a heavier alternative that is still able to maintain the queue if anything would go wrong.

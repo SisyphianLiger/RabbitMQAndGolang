@@ -7,7 +7,6 @@ type Player struct {
 
 type UnitRank string
 
-
 const (
 	RankInfantry  = "infantry"
 	RankCavalry   = "cavalry"
